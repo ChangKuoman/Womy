@@ -1,0 +1,57 @@
+# Womy 💰
+
+A Telegram bot that helps you manage your personal finances with AI assistance.
+
+## Features
+
+- 💬 Chat with an AI financial assistant
+- 📊 Track expenses and income
+- 🎯 Set and monitor budgets
+- 🎤 Voice message support with transcription
+- 🌍 Multi-language support (EN, ES, PT, FR)
+- 🗣️ Voice responses
+
+## Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd womy
+   ```
+
+2. **Run the bot**
+   ```bash
+   .\start_telegram.ps1
+   ```
+
+## Technologies
+
+- **Python 3.10+**
+- **Telegram Bot API** - Bot interface
+- **Featherless.ai** - AI assistant
+- **Groq Whisper** / **Fish Audio** - Audio transcription
+- **ElevenLabs** - Voice generation
+
+## License
+
+MIT License
+
+Copyright (c) 2026 Womy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
