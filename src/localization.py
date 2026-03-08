@@ -65,7 +65,8 @@ INSTRUCCIONES CRÍTICAS:
    - "analizar_categoria": palabras clave: en qué gasto más, dónde se va mi dinero, categorías
    - "proyeccion": palabras clave: me alcanzará, terminaré el mes, a este ritmo
    - "configurar_presupuesto": palabras clave: mi presupuesto es, tengo X para el mes, configura mi presupuesto
-   - "consejo_general": si pide consejos, ayuda o no tiene acción clara
+   - "consejo_general": palabras clave: consejo, ayuda, qué me recomiendas, dame un consejo, dame tips, estrategia, cómo puedo ahorrar, cómo mejorar, optimizar mis gastos
+   - "explicar_termino": palabras clave: qué es, explica, significado, qué significa, define, término, palabra, presupuesto, ingreso, deuda, interés, inversión, fondo de emergencia
 
 2. EXTRACCIÓN DE DATOS:
    - Si ves CUALQUIER NÚMERO en el mensaje, considéralo el monto
@@ -74,6 +75,7 @@ INSTRUCCIONES CRÍTICAS:
    - Si mencionan "taxi", "bus", "pasaje" → categoría: "Transporte"
    - Si mencionan "luz", "agua", "internet", "servicio" → categoría: "Servicios"
    - Si mencionan "presupuesto para el mes" → acción: "configurar_presupuesto"
+   - Si preguntan por un término financiero → acción: "explicar_termino", extrae el término en "termino"
    - Si la categoría no está clara → categoría: "Otro"
 
 3. FORMATO DE RESPUESTA JSON (OBLIGATORIO):
@@ -81,6 +83,7 @@ INSTRUCCIONES CRÍTICAS:
     "accion": "tipo_de_accion",
     "monto": NUMERO_EXTRAIDO o null,
     "categoria": "categoría" o null,
+    "termino": "término financiero" o null,
     "respuesta_texto": "mensaje corto",
     "respuesta_voz": "mensaje conversacional cálido"
 }}""",
@@ -118,6 +121,8 @@ CRITICAL INSTRUCTIONS:
    - "analizar_categoria": keywords: where I spend most, where does my money go
    - "proyeccion": keywords: will I make it, will I end the month
    - "configurar_presupuesto": keywords: my budget is, I have X for the month
+   - "consejo_general": keywords: advice, help, what do you recommend, give me advice, tips, strategy, how can I save, how to improve, optimize my expenses
+   - "explicar_termino": keywords: what is, explain, meaning, what does it mean, define, term, word, budget, income, debt, interest, investment, emergency fund
 
 2. DATA EXTRACTION:
    - If you see ANY NUMBER in the message, consider it the amount
@@ -125,6 +130,7 @@ CRITICAL INSTRUCTIONS:
    - If they mention "food", "market" → category: "Food"
    - If they mention "taxi", "bus" → category: "Transport"
    - If they mention "water", "electricity", "internet" → category: "Services"
+   - If they ask about a financial term → action: "explicar_termino", extract the term in "termino"
    - If category is unclear or unknown → category: "Other"
 
 3. JSON RESPONSE FORMAT (MANDATORY):
@@ -132,6 +138,7 @@ CRITICAL INSTRUCTIONS:
     "accion": "action_type",
     "monto": EXTRACTED_NUMBER or null,
     "categoria": "category" or null,
+    "termino": "financial term" or null,
     "respuesta_texto": "short message",
     "respuesta_voz": "warm conversational message"
 }}""",
@@ -168,6 +175,8 @@ INSTRUÇÕES CRÍTICAS:
    - "consultar_resumen": palavras-chave: quanto sobrou, como vou, meu resumo
    - "analizar_categoria": palavras-chave: onde gasto mais, aonde vai meu dinheiro
    - "proyeccion": palavras-chave: vou conseguir, vou terminar o mês
+   - "consejo_general": palavras-chave: conselho, ajuda, o que recomenda, dá um conselho, dicas, estratégia, como posso economizar, como melhorar
+   - "explicar_termino": palavras-chave: o que é, explica, significado, o que significa, define, termo, palavra, orçamento, renda, dívida, juros, investimento, fundo de emergência
 
 2. EXTRAÇÃO DE DADOS:
    - Se você vê QUALQUER NÚMERO na mensagem, considere-o o valor
@@ -175,6 +184,7 @@ INSTRUÇÕES CRÍTICAS:
    - Se mencionarem "comida", "mercado" → categoria: "Comida"
    - Se mencionarem "ônibus", "táxi" → categoria: "Transporte"
    - Se mencionarem "luz", "água", "internet" → categoria: "Serviços"
+   - Se perguntarem por um termo financeiro → ação: "explicar_termino", extraia o termo em "termino"
    - Se a categoria não estiver clara → categoria: "Outro"
 
 3. FORMATO DE RESPOSTA JSON (OBRIGATÓRIO):
@@ -182,6 +192,7 @@ INSTRUÇÕES CRÍTICAS:
     "accion": "tipo_de_acao",
     "monto": NUMERO_EXTRAIDO ou null,
     "categoria": "categoria" ou null,
+    "termino": "termo financeiro" ou null,
     "respuesta_texto": "mensagem curta",
     "respuesta_voz": "mensagem conversacional calorosa"
 }}""",
@@ -218,6 +229,8 @@ INSTRUCTIONS CRITIQUES:
    - "consultar_resumen": mots-clés: combien reste, comment je vais, mon résumé
    - "analizar_categoria": mots-clés: où je dépense le plus, où va mon argent
    - "proyeccion": mots-clés: vais-je réussir, vais-je finir le mois
+   - "consejo_general": mots-clés: conseil, aide, que recommandez-vous, donnez-moi un conseil, astuces, stratégie, comment puis-je économiser, comment améliorer
+   - "explicar_termino": mots-clés: qu'est-ce que, explique, signification, que signifie, défini, terme, mot, budget, revenu, dette, intérêt, investissement, fonds d'urgence
 
 2. EXTRACTION DE DONNÉES:
    - Si vous voyez N'IMPORTE QUEL NOMBRE dans le message, considérez-le comme le montant
@@ -225,6 +238,7 @@ INSTRUCTIONS CRITIQUES:
    - S'ils mentionnent "nourriture", "marché" → catégorie: "Nourriture"
    - S'ils mentionnent "taxi", "bus" → catégorie: "Transport"
    - S'ils mentionnent "eau", "électricité", "internet" → catégorie: "Services"
+   - S'ils posent une question sur un terme financier → action: "explicar_termino", extraire le terme dans "termino"
    - Si la catégorie n'est pas claire → catégorie: "Autre"
 
 3. FORMAT DE RÉPONSE JSON (OBLIGATOIRE):
@@ -232,6 +246,7 @@ INSTRUCTIONS CRITIQUES:
     "accion": "type_action",
     "monto": NOMBRE_EXTRAIT ou null,
     "categoria": "catégorie" ou null,
+    "termino": "terme financier" ou null,
     "respuesta_texto": "message court",
     "respuesta_voz": "message conversationnel chaleureux"
 }}""",

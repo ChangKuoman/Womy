@@ -194,6 +194,12 @@ class AsistenteFinanciero:
         elif accion == "configurar_presupuesto":
             return self._procesar_configurar_presupuesto(user_id, resultado, idioma, moneda)
 
+        elif accion == "consejo_general":
+            return self._procesar_consejo_general(user_id, idioma, moneda)
+
+        elif accion == "explicar_termino":
+            return self._procesar_explicar_termino(resultado, idioma, moneda)
+
         else:
             # Conversación general o consejo
             return resultado
@@ -347,6 +353,148 @@ You have {simbolo_moneda}{resumen['dinero_restante']:.2f} available. """
             "respuesta_texto": f"✓ Budget configured: {simbolo_moneda}{monto:.2f}/month",
             "respuesta_voz": obtener_traduccion(idioma, "presupuesto_establecido", moneda=simbolo_moneda, monto=monto)
         }
+
+    def _procesar_consejo_general(self, user_id: str, idioma: str = "en", moneda: str = "USD") -> Dict:
+        """Procesa una solicitud de consejo basada en gastos"""
+        consejo = analizador.generar_consejo_gastos(user_id, moneda)
+
+        return {
+            "accion": "consejo_general",
+            "respuesta_texto": consejo['consejo_texto'],
+            "respuesta_voz": consejo['consejo_voz']
+        }
+
+    def _procesar_explicar_termino(self, resultado: Dict, idioma: str = "en", moneda: str = "USD") -> Dict:
+        """Procesa una solicitud de explicación de término financiero"""
+        termino = resultado.get("termino", "")
+
+        if not termino:
+            return {
+                "accion": "explicar_termino",
+                "respuesta_texto": "Which financial term would you like to learn about? Ask me about: budget, income, savings, debt, interest, investment, emergency fund, etc.",
+                "respuesta_voz": "Which financial term would you like me to explain? You can ask me about common terms like budget, income, or savings."
+            }
+
+        explicacion = analizador.explicar_termino_financiero(termino)
+
+        # Si no encontró explicación predefinida, usar IA para generar una
+        if not explicacion['encontrado']:
+            return self._generar_explicacion_ia(termino, idioma, moneda)
+
+        return {
+            "accion": "explicar_termino",
+            "termino": explicacion['termino'],
+            "respuesta_texto": explicacion['explicacion_texto'],
+            "respuesta_voz": explicacion['explicacion_voz']
+        }
+
+    def _generar_explicacion_ia(self, termino: str, idioma: str = "en", moneda: str = "USD") -> Dict:
+        """Genera una explicación de término usando IA"""
+        simbolo_moneda = obtener_simbolo_moneda(moneda)
+
+        # Prompt en el idioma del usuario
+        prompts_ia = {
+            "es": f"""Explica de forma simple y amigable el término financiero "{termino}" para una mujer sin experiencia bancaria.
+La explicación debe:
+1. Ser muy simple, usando palabras cotidianas
+2. Incluir un ejemplo práctico
+3. Ser en español
+4. No usar términos bancarios complicados
+5. Ser motivadora y positiva
+
+Responde en formato:
+EXPLICACIÓN: [explicación simple]
+EJEMPLO: [ejemplo práctico]""",
+
+            "en": f"""Explain the financial term "{termino}" in simple and friendly language for a woman with no banking experience.
+The explanation must:
+1. Be very simple, using everyday words
+2. Include a practical example
+3. Be in English
+4. Not use complicated banking terms
+5. Be motivating and positive
+
+Respond in format:
+EXPLANATION: [simple explanation]
+EXAMPLE: [practical example]""",
+
+            "pt": f"""Explique o termo financeiro "{termino}" de forma simples e amigável para uma mulher sem experiência bancária.
+A explicação deve:
+1. Ser muito simples, usando palavras do dia a dia
+2. Incluir um exemplo prático
+3. Ser em português
+4. Não usar termos bancários complicados
+5. Ser motivadora e positiva
+
+Responda em formato:
+EXPLICAÇÃO: [explicação simples]
+EXEMPLO: [exemplo prático]""",
+
+            "fr": f"""Expliquez le terme financier "{termino}" de manière simple et conviviale pour une femme sans expérience bancaire.
+L'explication doit:
+1. Être très simple, en utilisant des mots courants
+2. Inclure un exemple pratique
+3. Être en français
+4. Ne pas utiliser de termes bancaires compliqués
+5. Être motivant et positif
+
+Répondez au format:
+EXPLICATION: [explication simple]
+EXEMPLE: [exemple pratique]"""
+        }
+
+        prompt = prompts_ia.get(idioma, prompts_ia["en"])
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful financial educator explaining terms to people with no banking experience. Be kind, simple, and encouraging."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=300
+            )
+
+            contenido = response.choices[0].message.content
+            print(f"🤖 Explicación IA generada para '{termino}': {contenido[:100]}...")
+
+            # Parsear la respuesta
+            lineas = contenido.split("\n")
+            explicacion_texto = ""
+            ejemplo_texto = ""
+
+            for linea in lineas:
+                if "EXPLICACIÓN" in linea.upper() or "EXPLANATION" in linea.upper() or "EXPLICATION" in linea.upper():
+                    explicacion_texto = linea.split(":", 1)[1].strip() if ":" in linea else linea
+                elif "EJEMPLO" in linea.upper() or "EXAMPLE" in linea.upper():
+                    ejemplo_texto = linea.split(":", 1)[1].strip() if ":" in linea else linea
+
+            # Si no se parseó correctamente, usar todo como explicación
+            if not explicacion_texto:
+                explicacion_texto = contenido[:200]
+
+            respuesta_texto = f"💡 {termino}:\n{explicacion_texto}"
+            if ejemplo_texto:
+                respuesta_texto += f"\n\n{ejemplo_texto}"
+
+            respuesta_voz = f"{explicacion_texto} {ejemplo_texto}".strip()
+
+            return {
+                "accion": "explicar_termino",
+                "termino": termino,
+                "respuesta_texto": respuesta_texto,
+                "respuesta_voz": respuesta_voz
+            }
+
+        except Exception as e:
+            print(f"❌ Error al generar explicación con IA: {e}")
+            return {
+                "accion": "explicar_termino",
+                "termino": termino,
+                "respuesta_texto": f"I couldn't find a predefined explanation for '{termino}', but here's what I can tell you: This is a financial term that relates to money management. Would you like me to explain a different term or help with something else?",
+                "respuesta_voz": f"I couldn't find a specific explanation for that term right now. Would you like to ask about other common financial terms like budget or savings?"
+            }
 
 
 # Instancia global del asistente
