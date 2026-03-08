@@ -43,7 +43,7 @@ class AsistenteFinanciero:
             usuario = db.obtener_usuario(user_id)
 
         # Obtener idioma y moneda del usuario
-        idioma = usuario.get('idioma', 'es')
+        idioma = usuario.get('idioma', 'en')
         moneda = usuario.get('moneda', 'USD')
 
         # Obtener contexto financiero
@@ -85,8 +85,8 @@ class AsistenteFinanciero:
             print(f"Contenido recibido: {contenido}")
             return {
                 "accion": "error",
-                "respuesta_texto": "Disculpa, tuve un problema al entender tu mensaje. ¿Podrías reformularlo?",
-                "respuesta_voz": "Disculpa amiga, no entendí bien tu mensaje. ¿Podrías decírmelo de otra forma?"
+                "respuesta_texto": "Sorry, I had trouble understanding your message. Could you rephrase it?",
+                "respuesta_voz": "Sorry friend, I didn't quite understand your message. Could you say it in another way?"
             }
         except Exception as e:
             print(f"❌ Error al procesar mensaje: {e}")
@@ -94,8 +94,8 @@ class AsistenteFinanciero:
             traceback.print_exc()
             return {
                 "accion": "error",
-                "respuesta_texto": "Disculpa, tuve un problema al procesar tu mensaje. ¿Podrías intentar de nuevo?",
-                "respuesta_voz": "Disculpa amiga, tuve un problema al procesar tu mensaje. ¿Podrías intentar de nuevo?"
+                "respuesta_texto": "Sorry, I had a problem processing your message. Could you try again?",
+                "respuesta_voz": "Sorry friend, I had a problem processing your message. Could you try again?"
             }
 
     def _procesar_onboarding(self, user_id: str, mensaje_usuario: str) -> Dict:
@@ -146,7 +146,7 @@ class AsistenteFinanciero:
             "respuesta_voz": respuesta_completa
         }
 
-    def _crear_prompt_sistema(self, resumen: Dict, idioma: str = "es", moneda: str = "USD") -> str:
+    def _crear_prompt_sistema(self, resumen: Dict, idioma: str = "en", moneda: str = "USD") -> str:
         """Crea el prompt del sistema con el contexto financiero"""
         simbolo_moneda = obtener_simbolo_moneda(moneda)
 
@@ -165,14 +165,14 @@ class AsistenteFinanciero:
     def _formatear_categorias(self, categorias: Dict, simbolo_moneda: str = "$") -> str:
         """Formatea las categorías para el prompt"""
         if not categorias:
-            return "- Aún no hay gastos registrados"
+            return "- No expenses registered yet"
 
         lineas = []
         for cat, monto in categorias.items():
             lineas.append(f"- {cat}: {simbolo_moneda}{monto:.2f}")
         return "\n".join(lineas)
 
-    def _procesar_accion(self, user_id: str, resultado: Dict, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_accion(self, user_id: str, resultado: Dict, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa la acción identificada por la IA"""
         accion = resultado.get("accion", "conversacion")
 
@@ -198,21 +198,21 @@ class AsistenteFinanciero:
             # Conversación general o consejo
             return resultado
 
-    def _procesar_gasto(self, user_id: str, resultado: Dict, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_gasto(self, user_id: str, resultado: Dict, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa un registro de gasto"""
         try:
             monto = float(resultado.get("monto", 0))
         except (ValueError, TypeError):
             monto = 0
 
-        categoria = resultado.get("categoria", "Otro")
+        categoria = resultado.get("categoria", "Other")
         simbolo_moneda = obtener_simbolo_moneda(moneda)
 
         if monto <= 0:
             return {
                 "accion": "error",
-                "respuesta_texto": "No pude identificar el monto. ¿Cuánto gastaste?",
-                "respuesta_voz": "Amiga, no pude identificar el monto que gastaste. ¿Me lo puedes decir de nuevo por favor?"
+                "respuesta_texto": "I couldn't identify the amount. How much did you spend?",
+                "respuesta_voz": "Friend, I couldn't identify the amount you spent. Could you tell me again please?"
             }
 
         print(f"💸 Registrando gasto: {simbolo_moneda}{monto:.2f} en {categoria}")
@@ -229,11 +229,11 @@ class AsistenteFinanciero:
             "monto": monto,
             "categoria": categoria,
             "dinero_restante": analisis['dinero_restante'],
-            "respuesta_texto": f"✓ {simbolo_moneda}{monto:.2f} en {categoria}. Quedan {simbolo_moneda}{analisis['dinero_restante']:.2f}",
+            "respuesta_texto": f"✓ {simbolo_moneda}{monto:.2f} on {categoria}. Remaining {simbolo_moneda}{analisis['dinero_restante']:.2f}",
             "respuesta_voz": analisis['consejo']
         }
 
-    def _procesar_ingreso(self, user_id: str, resultado: Dict, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_ingreso(self, user_id: str, resultado: Dict, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa un registro de ingreso"""
         try:
             monto = float(resultado.get("monto", 0))
@@ -245,8 +245,8 @@ class AsistenteFinanciero:
         if monto <= 0:
             return {
                 "accion": "error",
-                "respuesta_texto": "No pude identificar el monto. ¿Cuánto recibiste?",
-                "respuesta_voz": "Amiga, no pude identificar el monto que recibiste. ¿Me lo puedes decir de nuevo?"
+                "respuesta_texto": "I couldn't identify the amount. How much did you receive?",
+                "respuesta_voz": "Friend, I couldn't identify the amount you received. Could you tell me again?"
             }
 
         print(f"💵 Registrando ingreso: {simbolo_moneda}{monto:.2f}")
@@ -255,35 +255,35 @@ class AsistenteFinanciero:
         analisis = analizador.analizar_ingreso(user_id, monto, moneda)
 
         # Guardar en la base de datos
-        db.guardar_movimiento(user_id, monto, "Ingreso", "ingreso")
+        db.guardar_movimiento(user_id, monto, "Income", "ingreso")
         print(f"✅ Ingreso guardado en la base de datos")
 
         return {
             "accion": "registrar_ingreso",
             "monto": monto,
-            "respuesta_texto": f"✓ Ingreso de {simbolo_moneda}{monto:.2f} registrado",
+            "respuesta_texto": f"✓ Income of {simbolo_moneda}{monto:.2f} registered",
             "respuesta_voz": analisis['consejo']
         }
 
-    def _procesar_consulta_resumen(self, user_id: str, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_consulta_resumen(self, user_id: str, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa una consulta de resumen"""
         resumen = db.obtener_resumen_mensual(user_id)
         simbolo_moneda = obtener_simbolo_moneda(moneda)
 
-        mensaje_texto = f"""💰 Resumen del mes:
-Presupuesto: {simbolo_moneda}{resumen['presupuesto_mensual']:.2f}
-Gastado: {simbolo_moneda}{resumen['total_gastado']:.2f}
-Disponible: {simbolo_moneda}{resumen['dinero_restante']:.2f}"""
+        mensaje_texto = f"""💰 Monthly Summary:
+Budget: {simbolo_moneda}{resumen['presupuesto_mensual']:.2f}
+Spent: {simbolo_moneda}{resumen['total_gastado']:.2f}
+Available: {simbolo_moneda}{resumen['dinero_restante']:.2f}"""
 
-        mensaje_voz = f"""Aquí está tu resumen del mes amiga.
-Tu presupuesto es de {simbolo_moneda}{resumen['presupuesto_mensual']:.2f}.
-Has gastado {simbolo_moneda}{resumen['total_gastado']:.2f}, que es el {resumen['porcentaje_gastado']:.1f}%.
-Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
+        mensaje_voz = f"""Here's your monthly summary friend.
+Your budget is {simbolo_moneda}{resumen['presupuesto_mensual']:.2f}.
+You've spent {simbolo_moneda}{resumen['total_gastado']:.2f}, which is {resumen['porcentaje_gastado']:.1f}%.
+You have {simbolo_moneda}{resumen['dinero_restante']:.2f} available. """
 
         if resumen['porcentaje_gastado'] > 80:
-            mensaje_voz += "Recuerda cuidar los gastos estos días para llegar bien a fin de mes."
+            mensaje_voz += "Remember to watch your spending these days to finish the month well."
         else:
-            mensaje_voz += "Vas muy bien, sigue así."
+            mensaje_voz += "You're doing great, keep it up."
 
         return {
             "accion": "consultar_resumen",
@@ -291,7 +291,7 @@ Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
             "respuesta_voz": mensaje_voz
         }
 
-    def _procesar_analisis_categoria(self, user_id: str, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_analisis_categoria(self, user_id: str, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa un análisis por categoría"""
         analisis = analizador.analizar_por_categoria(user_id, moneda)
         simbolo_moneda = obtener_simbolo_moneda(moneda)
@@ -302,18 +302,18 @@ Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
             "respuesta_voz": analisis['mensaje']
         }
 
-    def _procesar_proyeccion(self, user_id: str, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_proyeccion(self, user_id: str, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa una proyección de fin de mes"""
         proyeccion = analizador.proyeccion_fin_de_mes(user_id, moneda)
         simbolo_moneda = obtener_simbolo_moneda(moneda)
 
         return {
             "accion": "proyeccion",
-            "respuesta_texto": f"Promedio diario: {simbolo_moneda}{proyeccion['gasto_diario_promedio']:.2f}",
+            "respuesta_texto": f"Daily average: {simbolo_moneda}{proyeccion['gasto_diario_promedio']:.2f}",
             "respuesta_voz": proyeccion['mensaje']
         }
 
-    def _procesar_configurar_presupuesto(self, user_id: str, resultado: Dict, idioma: str = "es", moneda: str = "USD") -> Dict:
+    def _procesar_configurar_presupuesto(self, user_id: str, resultado: Dict, idioma: str = "en", moneda: str = "USD") -> Dict:
         """Procesa la configuración de presupuesto"""
         try:
             monto = float(resultado.get("monto", 0))
@@ -322,11 +322,16 @@ Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
 
         simbolo_moneda = obtener_simbolo_moneda(moneda)
 
+        print(f"📊 DEBUG - Configurando presupuesto:")
+        print(f"   User ID: {user_id}")
+        print(f"   Monto extraído por IA: {resultado.get('monto')}")
+        print(f"   Monto convertido a float: {monto}")
+
         if monto <= 0:
             return {
                 "accion": "error",
-                "respuesta_texto": "¿Cuál es tu presupuesto mensual?",
-                "respuesta_voz": "¿Cuál es tu presupuesto mensual amiga?"
+                "respuesta_texto": "What's your monthly budget?",
+                "respuesta_voz": "What's your monthly budget friend?"
             }
 
         # Actualizar presupuesto en la base de datos
@@ -339,7 +344,7 @@ Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
         return {
             "accion": "configurar_presupuesto",
             "monto": monto,
-            "respuesta_texto": f"✓ Presupuesto configurado: {simbolo_moneda}{monto:.2f}/mes",
+            "respuesta_texto": f"✓ Budget configured: {simbolo_moneda}{monto:.2f}/month",
             "respuesta_voz": obtener_traduccion(idioma, "presupuesto_establecido", moneda=simbolo_moneda, monto=monto)
         }
 

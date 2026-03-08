@@ -29,7 +29,7 @@ class TranscriptorAudio:
         if not os.path.exists(self.audio_dir):
             os.makedirs(self.audio_dir)
 
-    def transcribir_audio(self, audio_path: str, idioma: str = "es") -> Optional[str]:
+    def transcribir_audio(self, audio_path: str, idioma: str = "en") -> Optional[str]:
         """
         Transcribe un archivo de audio a texto usando Fish Audio o Groq Whisper
 
@@ -96,7 +96,7 @@ class TranscriptorAudio:
         """Transcribe usando Fish Audio"""
         try:
             idioma_map = {"es": "es", "en": "en", "pt": "pt", "fr": "fr"}
-            language = idioma_map.get(idioma, "es")
+            language = idioma_map.get(idioma, "en")
 
             with open(audio_path, 'rb') as audio_file:
                 files = {'audio': audio_file}

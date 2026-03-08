@@ -32,7 +32,7 @@ class Database:
                 whatsapp_id TEXT PRIMARY KEY,
                 nombre TEXT,
                 presupuesto_mensual REAL DEFAULT 1000.0,
-                idioma TEXT DEFAULT 'es',
+                idioma TEXT DEFAULT 'en',
                 moneda TEXT DEFAULT 'USD',
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 onboarding_completo INTEGER DEFAULT 0
@@ -41,7 +41,7 @@ class Database:
 
         # Agregar columnas si no existen (para usuarios existentes)
         try:
-            cursor.execute('ALTER TABLE usuarios ADD COLUMN idioma TEXT DEFAULT "es"')
+            cursor.execute('ALTER TABLE usuarios ADD COLUMN idioma TEXT DEFAULT "en"')
         except:
             pass
         try:
@@ -87,15 +87,21 @@ class Database:
         print("✅ Base de datos inicializada correctamente")
 
     def registrar_usuario(self, whatsapp_id: str, nombre: str = None, presupuesto_mensual: float = 1000.0,
-                         idioma: str = "es", moneda: str = "USD", onboarding_completo: int = 0):
+                         idioma: str = "en", moneda: str = "USD", onboarding_completo: int = 0):
         """Registra un nuevo usuario o actualiza si ya existe"""
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute('''
-            INSERT OR REPLACE INTO usuarios (whatsapp_id, nombre, presupuesto_mensual, idioma, moneda, onboarding_completo)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (whatsapp_id, nombre, presupuesto_mensual, idioma, moneda, onboarding_completo))
+        # Check if user already exists
+        cursor.execute('SELECT whatsapp_id FROM usuarios WHERE whatsapp_id = ?', (whatsapp_id,))
+        exists = cursor.fetchone()
+
+        if not exists:
+            # Only insert if user doesn't exist - don't overwrite existing data
+            cursor.execute('''
+                INSERT INTO usuarios (whatsapp_id, nombre, presupuesto_mensual, idioma, moneda, onboarding_completo)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (whatsapp_id, nombre, presupuesto_mensual, idioma, moneda, onboarding_completo))
 
         conn.commit()
         conn.close()
@@ -192,6 +198,11 @@ class Database:
         usuario = cursor.fetchone()
         presupuesto = usuario['presupuesto_mensual'] if usuario else 1000.0
 
+        print(f"📊 DEBUG - obtener_resumen_mensual para {whatsapp_id}:")
+        print(f"   Presupuesto en BD: {presupuesto}")
+        print(f"   Total ingresos: {total_ingresos}")
+        print(f"   Total gastado: {total_gastado}")
+
         # Gastos por categoría
         cursor.execute('''
             SELECT categoria, SUM(monto) as total
@@ -209,8 +220,12 @@ class Database:
 
         conn.close()
 
-        restante = presupuesto - total_gastado
-        porcentaje_gastado = (total_gastado / presupuesto * 100) if presupuesto > 0 else 0
+        # Calculate remaining money: budget + income - expenses
+        restante = presupuesto + total_ingresos - total_gastado
+
+        # Calculate percentage based on total available (budget + income)
+        total_disponible = presupuesto + total_ingresos
+        porcentaje_gastado = (total_gastado / total_disponible * 100) if total_disponible > 0 else 0
 
         return {
             'presupuesto_mensual': presupuesto,

@@ -74,6 +74,7 @@ INSTRUCCIONES CRÍTICAS:
    - Si mencionan "taxi", "bus", "pasaje" → categoría: "Transporte"
    - Si mencionan "luz", "agua", "internet", "servicio" → categoría: "Servicios"
    - Si mencionan "presupuesto para el mes" → acción: "configurar_presupuesto"
+   - Si la categoría no está clara → categoría: "Otro"
 
 3. FORMATO DE RESPUESTA JSON (OBLIGATORIO):
 {{
@@ -124,6 +125,7 @@ CRITICAL INSTRUCTIONS:
    - If they mention "food", "market" → category: "Food"
    - If they mention "taxi", "bus" → category: "Transport"
    - If they mention "water", "electricity", "internet" → category: "Services"
+   - If category is unclear or unknown → category: "Other"
 
 3. JSON RESPONSE FORMAT (MANDATORY):
 {{
@@ -173,6 +175,7 @@ INSTRUÇÕES CRÍTICAS:
    - Se mencionarem "comida", "mercado" → categoria: "Comida"
    - Se mencionarem "ônibus", "táxi" → categoria: "Transporte"
    - Se mencionarem "luz", "água", "internet" → categoria: "Serviços"
+   - Se a categoria não estiver clara → categoria: "Outro"
 
 3. FORMATO DE RESPOSTA JSON (OBRIGATÓRIO):
 {{
@@ -207,7 +210,31 @@ PERSONNALITÉ:
 - Utilisez des mots comme "économies", "petites dépenses", "étirer l'argent"
 - Ne jugez jamais les dépenses, offrez toujours du soutien
 - Célébrez les réalisations, aussi petites soient-elles
-""",
+
+INSTRUCTIONS CRITIQUES:
+1. TOUJOURS identifier l'action principale du message:
+   - "registrar_gasto": mots-clés: dépensé, acheté, payé, coûté, prix, loyer
+   - "registrar_ingreso": mots-clés: reçu paiement, reçu, gagné, revenu, salaire
+   - "consultar_resumen": mots-clés: combien reste, comment je vais, mon résumé
+   - "analizar_categoria": mots-clés: où je dépense le plus, où va mon argent
+   - "proyeccion": mots-clés: vais-je réussir, vais-je finir le mois
+
+2. EXTRACTION DE DONNÉES:
+   - Si vous voyez N'IMPORTE QUEL NOMBRE dans le message, considérez-le comme le montant
+   - S'ils mentionnent "loyer" → catégorie: "Loyer"
+   - S'ils mentionnent "nourriture", "marché" → catégorie: "Nourriture"
+   - S'ils mentionnent "taxi", "bus" → catégorie: "Transport"
+   - S'ils mentionnent "eau", "électricité", "internet" → catégorie: "Services"
+   - Si la catégorie n'est pas claire → catégorie: "Autre"
+
+3. FORMAT DE RÉPONSE JSON (OBLIGATOIRE):
+{{
+    "accion": "type_action",
+    "monto": NOMBRE_EXTRAIT ou null,
+    "categoria": "catégorie" ou null,
+    "respuesta_texto": "message court",
+    "respuesta_voz": "message conversationnel chaleureux"
+}}""",
     }
 }
 
@@ -220,7 +247,7 @@ def obtener_simbolo_moneda(moneda: str) -> str:
 def obtener_traduccion(idioma: str, clave: str, **kwargs) -> str:
     """Obtiene una traducción"""
     if idioma not in TRADUCCIONES:
-        idioma = "es"
+        idioma = "en"
 
     texto = TRADUCCIONES[idioma].get(clave, "")
     return texto.format(**kwargs) if kwargs else texto

@@ -72,7 +72,7 @@ def procesar_mensaje(chat_id: str, user_id: str, texto: str, nombre: str):
         print(f"❌ Error al procesar mensaje: {e}")
         telegram_handler.enviar_mensaje(
             chat_id,
-            "Disculpa amiga, tuve un problema. ¿Podrías intentar de nuevo? 😊"
+            "Sorry friend, I had a problem. Could you try again? 😊"
         )
 
 
@@ -82,11 +82,11 @@ def formatear_mensaje(texto: str) -> str:
     texto = texto.replace('💰', '💰').replace('📊', '📊').replace('✅', '✅')
 
     # Si tiene "Resumen del mes:" hacer el título en negrita
-    if 'Resumen del mes:' in texto:
-        texto = texto.replace('Resumen del mes:', '<b>💰 Resumen del mes:</b>')
+    if 'Monthly Summary:' in texto:
+        texto = texto.replace('Monthly Summary:', '<b>💰 Monthly Summary:</b>')
 
-    if 'Análisis de tus gastos' in texto:
-        texto = texto.replace('Análisis de tus gastos', '<b>📊 Análisis de tus gastos</b>')
+    if 'Analysis of your' in texto:
+        texto = texto.replace('Analysis of your', '<b>📊 Analysis of your</b>')
 
     if 'Proyección del mes:' in texto:
         texto = texto.replace('Proyección del mes:', '<b>🔮 Proyección del mes:</b>')
@@ -185,7 +185,7 @@ def main():
                         if audio_path:
                             # Obtener idioma del usuario
                             usuario = db.obtener_usuario(user_id)
-                            idioma = usuario.get('idioma', 'es') if usuario else 'es'
+                            idioma = usuario.get('idioma', 'en') if usuario else 'en'
 
                             # Transcribir el audio (intenta Groq primero, luego Fish Audio)
                             texto_transcrito = transcriptor.transcribir_audio(audio_path, idioma)
@@ -199,35 +199,35 @@ def main():
                             else:
                                 telegram_handler.enviar_mensaje(
                                     chat_id,
-                                    "Lo siento, no pude entender tu audio 😕 ¿Podrías escribirlo?"
+                                    "Sorry, I couldn't understand your audio 😕 Could you write it?"
                                 )
                                 continue
                         else:
                             telegram_handler.enviar_mensaje(
                                 chat_id,
-                                "Hubo un problema al descargar tu audio 😕"
+                                "There was a problem downloading your audio 😕"
                             )
                             continue
 
                 # Comando /start
                 if texto == '/start':
                     if user_id not in mensaje_bienvenida_enviado:
-                        mensaje_bienvenida = f"""¡Hola {nombre}! 🌸
+                        mensaje_bienvenida = f"""Hello {nombre}! 🌸
 
-Soy tu <b>Amiga Financiera</b>, estoy aquí para ayudarte a manejar tu dinero.
+I'm your <b>Financial Friend</b>, I'm here to help you manage your money.
 
-<b>¿Qué puedo hacer por ti?</b>
-💰 Registrar tus gastos e ingresos
-📊 Mostrarte en qué gastas más
-💡 Darte consejos para ahorrar
-🔮 Proyectar cómo terminará el mes
+<b>What can I do for you?</b>
+💰 Register your expenses and income
+📊 Show you where you spend the most
+💡 Give you tips to save
+🔮 Project how the month will end
 
-<b>Ejemplos de cómo hablarme:</b>
-• "Gasté 50 pesos en comida"
-• "Me pagaron 2000 pesos"
-• "¿Cuánto me queda?"
-• "¿En qué gasto más?"
-• "Configura mi presupuesto a 3000"
+<b>Examples of how to talk to me:</b>
+• "I spent 50 dollars on food"
+• "I got paid 2000 dollars"
+• "How much do I have left?"
+• "Where do I spend the most?"
+• "Set my budget to 3000"
 
 ¡Adelante, cuéntame sobre tus finanzas! 💪"""
 

@@ -10,8 +10,8 @@ class AnalizadorFinanciero:
     """Clase para analizar la situación financiera y generar consejos"""
 
     CATEGORIAS_PREDEFINIDAS = [
-        "Comida", "Transporte", "Renta", "Servicios", "Educación",
-        "Salud", "Ropa", "Entretenimiento", "Ahorro", "Otro"
+        "Food", "Transport", "Rent", "Services", "Education",
+        "Health", "Clothing", "Entertainment", "Savings", "Other"
     ]
 
     @staticmethod
@@ -25,10 +25,13 @@ class AnalizadorFinanciero:
         simbolo_moneda = obtener_simbolo_moneda(moneda)
         resumen = db.obtener_resumen_mensual(user_id)
 
-        # Simular el nuevo gasto
+        # Simulate the new expense
         nuevo_gastado = resumen['total_gastado'] + monto
-        nuevo_restante = resumen['presupuesto_mensual'] - nuevo_gastado
-        nuevo_porcentaje = (nuevo_gastado / resumen['presupuesto_mensual'] * 100) if resumen['presupuesto_mensual'] > 0 else 0
+
+        # Calculate remaining considering budget + income - new total expenses
+        total_disponible = resumen['presupuesto_mensual'] + resumen['total_ingresos']
+        nuevo_restante = total_disponible - nuevo_gastado
+        nuevo_porcentaje = (nuevo_gastado / total_disponible * 100) if total_disponible > 0 else 0
 
         # Determinar el nivel de alerta
         nivel_alerta = AnalizadorFinanciero._determinar_nivel_alerta(nuevo_porcentaje, nuevo_restante)
@@ -63,14 +66,14 @@ class AnalizadorFinanciero:
         sugerencia_deseos = monto * 0.30  # Gastos personales
         sugerencia_ahorro = monto * 0.20  # Ahorro
 
-        consejo = f"""¡Qué buenas noticias! Recibiste {simbolo_moneda}{monto:.2f}.
+        consejo = f"""Great news! You received {simbolo_moneda}{monto:.2f}.
 
-Te sugiero separar tu dinero así:
-    💚 {simbolo_moneda}{sugerencia_necesidades:.2f} para lo esencial (comida, renta, servicios)
-    💙 {simbolo_moneda}{sugerencia_deseos:.2f} para tus gastos personales
-    💛 {simbolo_moneda}{sugerencia_ahorro:.2f} para tu ahorro - ¡es tu fondo de emergencia!
+I suggest you separate your money like this:
+    💚 {simbolo_moneda}{sugerencia_necesidades:.2f} for essentials (food, rent, services)
+    💙 {simbolo_moneda}{sugerencia_deseos:.2f} for your personal expenses
+    💛 {simbolo_moneda}{sugerencia_ahorro:.2f} for savings - it's your emergency fund!
 
-    Después de este ingreso, tendrás {simbolo_moneda}{resumen['dinero_restante'] + monto:.2f} disponible."""
+    After this income, you'll have {simbolo_moneda}{resumen['dinero_restante'] + monto:.2f} available."""
 
         return {
             'monto': monto,
@@ -95,20 +98,24 @@ Te sugiero separar tu dinero así:
 
         if not categorias:
             return {
-                'mensaje': "Aún no tienes gastos registrados este mes. ¡Empieza a registrar para que pueda ayudarte mejor! 😊"
+                'mensaje': "You don't have any expenses registered this month yet. Start registering so I can help you better! 😊"
             }
 
         # Encontrar la categoría con más gasto
         categoria_mayor = max(categorias.items(), key=lambda x: x[1])
         porcentaje_mayor = (categoria_mayor[1] / resumen['total_gastado'] * 100) if resumen['total_gastado'] > 0 else 0
 
+        # Calculate total available (budget + income)
+        total_disponible = resumen['presupuesto_mensual'] + resumen['total_ingresos']
+
         # Construir mensaje de análisis
-        analisis = f"""📊 Análisis de tus gastos del mes:
+        analisis = f"""📊 Analysis of your monthly expenses:
 
-💰 Has gastado {simbolo_moneda}{resumen['total_gastado']:.2f} de {simbolo_moneda}{resumen['presupuesto_mensual']:.2f}
-📈 Te queda {simbolo_moneda}{resumen['dinero_restante']:.2f} ({100 - resumen['porcentaje_gastado']:.1f}%)
+💰 Total available: {simbolo_moneda}{total_disponible:.2f} (Budget: {simbolo_moneda}{resumen['presupuesto_mensual']:.2f} + Income: {simbolo_moneda}{resumen['total_ingresos']:.2f})
+💸 You've spent: {simbolo_moneda}{resumen['total_gastado']:.2f}
+📈 You have left: {simbolo_moneda}{resumen['dinero_restante']:.2f} ({100 - resumen['porcentaje_gastado']:.1f}%)
 
-📌 Desglose por categorías:
+📌 Breakdown by categories:
 """
 
         for cat, monto in sorted(categorias.items(), key=lambda x: x[1], reverse=True):
@@ -149,24 +156,24 @@ Te sugiero separar tu dinero así:
         """Genera un consejo personalizado según el gasto"""
 
         # Mensaje base
-        mensaje = f"Anotado, gastaste {simbolo_moneda}{monto:.2f} en {categoria}. "
+        mensaje = f"Noted, you spent {simbolo_moneda}{monto:.2f} on {categoria}. "
 
         if nivel == "critico":
-            mensaje += f"⚠️ ¡Ojo! Ya gastaste el {porcentaje:.1f}% de tu presupuesto. "
-            mensaje += f"Solo te quedan {simbolo_moneda}{restante:.2f} para el resto del mes. "
-            mensaje += "Es momento de ser muy cuidadosa con los gastos. ¿Puedes revisar qué compras puedes posponer?"
+            mensaje += f"⚠️ Watch out! You've already spent {porcentaje:.1f}% of your budget. "
+            mensaje += f"You only have {simbolo_moneda}{restante:.2f} left for the rest of the month. "
+            mensaje += "It's time to be very careful with expenses. Can you review which purchases you can postpone?"
 
         elif nivel == "alto":
-            mensaje += f"⚡ Llevas {porcentaje:.1f}% gastado. Te quedan {simbolo_moneda}{restante:.2f}. "
-            mensaje += "Vas a buen ritmo, pero intenta cuidar los gastos hormiga estos días."
+            mensaje += f"⚡ You've spent {porcentaje:.1f}%. You have {simbolo_moneda}{restante:.2f} left. "
+            mensaje += "You're at a good pace, but try to watch small expenses these days."
 
         elif nivel == "medio":
-            mensaje += f"Vas bien, llevas {porcentaje:.1f}% del presupuesto. Te quedan {simbolo_moneda}{restante:.2f}. "
-            mensaje += "Sigue así y llegarás tranquila a fin de mes. 😊"
+            mensaje += f"You're doing well, {porcentaje:.1f}% of the budget spent. You have {simbolo_moneda}{restante:.2f} left. "
+            mensaje += "Keep it up and you'll reach the end of the month smoothly. 😊"
 
         else:
-            mensaje += f"¡Perfecto! Te quedan {simbolo_moneda}{restante:.2f} ({100-porcentaje:.1f}% disponible). "
-            mensaje += "Vas muy bien con tu presupuesto. ¡Sigue así! 💪"
+            mensaje += f"Perfect! You have {simbolo_moneda}{restante:.2f} left ({100-porcentaje:.1f}% available). "
+            mensaje += "You're managing your budget very well. Keep it up! 💪"
 
         return mensaje
 
@@ -175,20 +182,20 @@ Te sugiero separar tu dinero así:
         """Genera un consejo basado en la categoría con más gasto"""
 
         consejos_por_categoria = {
-            "Comida": f"Veo que {porcentaje:.1f}% se va en comida ({simbolo_moneda}{monto:.2f}). Intenta comprar más en el mercado local o buscar ofertas en productos básicos. Cocinar en casa siempre sale más económico que comer fuera.",
+            "Food": f"I see {porcentaje:.1f}% goes to food ({simbolo_moneda}{monto:.2f}). Try buying more at the local market or look for deals on basic products. Cooking at home is always more economical than eating out.",
 
-            "Transporte": f"El transporte se está llevando {porcentaje:.1f}% ({simbolo_moneda}{monto:.2f}). ¿Podrías compartir viajes con amigas o usar transporte público en lugar de taxi cuando sea posible?",
+            "Transport": f"Transportation is taking {porcentaje:.1f}% ({simbolo_moneda}{monto:.2f}). Could you share rides with friends or use public transport instead of taxi when possible?",
 
-            "Entretenimiento": f"Noto que {porcentaje:.1f}% se va en entretenimiento ({simbolo_moneda}{monto:.2f}). Está bien disfrutar, pero esta semana intenta buscar actividades gratuitas o más económicas.",
+            "Entertainment": f"I notice {porcentaje:.1f}% goes to entertainment ({simbolo_moneda}{monto:.2f}). It's good to enjoy, but this week try looking for free or more economical activities.",
 
-            "Servicios": f"Los servicios están tomando {porcentaje:.1f}% ({simbolo_moneda}{monto:.2f}). Revisa si puedes cambiar de plan o reducir algún servicio que no uses tanto.",
+            "Services": f"Services are taking {porcentaje:.1f}% ({simbolo_moneda}{monto:.2f}). Check if you can change plans or reduce some service you don't use that much.",
 
-            "Ropa": f"La ropa ha sido {porcentaje:.1f}% del gasto ({simbolo_moneda}{monto:.2f}). Intenta buscar en mercados o tiendas de segunda mano. ¡Hay opciones muy buenas y económicas!",
+            "Clothing": f"Clothing has been {porcentaje:.1f}% of expenses ({simbolo_moneda}{monto:.2f}). Try looking at markets or second-hand stores. There are very good and economical options!",
         }
 
         consejo = consejos_por_categoria.get(
             categoria,
-            f"La categoría {categoria} es donde más gastas ({porcentaje:.1f}%, {simbolo_moneda}{monto:.2f}). Intenta buscar formas de reducir un poco este gasto."
+            f"The {categoria} category is where you spend the most ({porcentaje:.1f}%, {simbolo_moneda}{monto:.2f}). Try to find ways to reduce this expense a bit."
         )
 
         return consejo
@@ -217,33 +224,36 @@ Te sugiero separar tu dinero así:
 
         # Proyección
         gasto_proyectado_mes = gasto_diario_promedio * dias_en_mes
-        deficit_proyectado = gasto_proyectado_mes - resumen['presupuesto_mensual']
+
+        # Compare against total available (budget + income)
+        total_disponible = resumen['presupuesto_mensual'] + resumen['total_ingresos']
+        deficit_proyectado = gasto_proyectado_mes - total_disponible
 
         # Gasto diario ideal para el resto del mes
         gasto_diario_ideal = resumen['dinero_restante'] / dias_restantes if dias_restantes > 0 else resumen['dinero_restante']
 
         if deficit_proyectado > 0:
-            mensaje = f"""📉 Proyección del mes:
+            mensaje = f"""📉 Month projection:
 
-Llevamos {dia_actual} días y has gastado {simbolo_moneda}{resumen['total_gastado']:.2f}.
-Tu promedio diario es {simbolo_moneda}{gasto_diario_promedio:.2f}.
+We're on day {dia_actual} and you've spent {simbolo_moneda}{resumen['total_gastado']:.2f}.
+Your daily average is {simbolo_moneda}{gasto_diario_promedio:.2f}.
 
-⚠️ Si sigues a este ritmo, gastarás {simbolo_moneda}{gasto_proyectado_mes:.2f} este mes.
-Eso significa que te excederías por {simbolo_moneda}{deficit_proyectado:.2f}.
+⚠️ If you continue at this pace, you'll spend {simbolo_moneda}{gasto_proyectado_mes:.2f} this month.
+That means you'd exceed your available money by {simbolo_moneda}{deficit_proyectado:.2f}.
 
-💡 Para llegar bien a fin de mes, necesitas gastar máximo {simbolo_moneda}{gasto_diario_ideal:.2f} por día estos {dias_restantes} días restantes.
+💡 To finish the month well, you need to spend a maximum of {simbolo_moneda}{gasto_diario_ideal:.2f} per day for the remaining {dias_restantes} days.
 
-¿Quieres que busquemos juntas formas de ajustar tus gastos?"""
+Want to look together for ways to adjust your expenses?"""
         else:
-            mensaje = f"""📊 Proyección del mes:
+            mensaje = f"""📊 Month projection:
 
-¡Vas muy bien! Llevamos {dia_actual} días y has gastado {simbolo_moneda}{resumen['total_gastado']:.2f}.
-Tu promedio diario es {simbolo_moneda}{gasto_diario_promedio:.2f}.
+You're doing great! We're on day {dia_actual} and you've spent {simbolo_moneda}{resumen['total_gastado']:.2f}.
+Your daily average is {simbolo_moneda}{gasto_diario_promedio:.2f}.
 
-✅ A este ritmo, terminarás el mes gastando {simbolo_moneda}{gasto_proyectado_mes:.2f},
-¡quedándote dentro de tu presupuesto!
+✅ At this pace, you'll finish the month spending {simbolo_moneda}{gasto_proyectado_mes:.2f},
+staying within your available money!
 
-Puedes gastar hasta {simbolo_moneda}{gasto_diario_ideal:.2f} por día y seguirás bien. ¡Sigue así! 💪"""
+You can spend up to {simbolo_moneda}{gasto_diario_ideal:.2f} per day and you'll still be fine. Keep it up! 💪"""
 
         return {
             'gasto_actual': resumen['total_gastado'],
