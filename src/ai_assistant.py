@@ -298,7 +298,7 @@ Te quedan {simbolo_moneda}{resumen['dinero_restante']:.2f} disponibles. """
 
         return {
             "accion": "analizar_categoria",
-            "respuesta_texto": analisis['mensaje'][:200] + "...",  # Versión corta
+            "respuesta_texto": analisis['mensaje'],
             "respuesta_voz": analisis['mensaje']
         }
 
